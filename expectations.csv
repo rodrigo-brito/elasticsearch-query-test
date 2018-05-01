@@ -1,0 +1,8 @@
+search_term,result_field,result_value,result_position,description
+nelson p,name,Nelson Pantera,0,prefix query with expansion
+maiara azevedo,name,Naiara Azevedo,0,fuzzy in first term
+tia nastacia,name,Tianastácia,0,concat terms for search
+1 kilo,name,1Kilo,0,
+imortal opus,name,Immortal Opus,0,
+kevin,name,Kevinho,0,
+naiara a,name,Naiara Azevedo,0,
