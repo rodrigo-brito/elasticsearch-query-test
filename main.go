@@ -9,11 +9,7 @@ import (
 	"time"
 
 	"github.com/gocarina/gocsv"
-)
-
-const (
-	expectationFile = "expectations.csv"
-	baseURL         = "http://localhost:3000"
+	"github.com/spf13/cobra"
 )
 
 type elasticHit struct {
@@ -42,7 +38,7 @@ type expectation struct {
 	Descritption   string `csv:"description"`
 }
 
-func getExpectations() ([]*expectation, error) {
+func getExpectations(expectationFile string) ([]*expectation, error) {
 	clientsFile, err := os.OpenFile(expectationFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -58,9 +54,9 @@ func getExpectations() ([]*expectation, error) {
 	return expectations, nil
 }
 
-func checkResult(expectation *expectation) (bool, string, error) {
+func checkResult(endpoint string, expectation *expectation) (bool, string, error) {
 	client := new(http.Client)
-	req, err := http.NewRequest("GET", baseURL, nil)
+	req, err := http.NewRequest("GET", endpoint, nil)
 
 	q := req.URL.Query()
 	q.Add("q", expectation.SearchTerm)
@@ -93,8 +89,8 @@ func checkResult(expectation *expectation) (bool, string, error) {
 	return fmt.Sprint(value) == expectation.ResultValue, fmt.Sprint(value), nil
 }
 
-func main() {
-	expectations, err := getExpectations()
+func run(baseURL, expectationFile string) {
+	expectations, err := getExpectations(expectationFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,7 +98,7 @@ func main() {
 	startTime := time.Now()
 	total := 0
 	for _, expectation := range expectations {
-		ok, result, err := checkResult(expectation)
+		ok, result, err := checkResult(baseURL, expectation)
 		if err != nil {
 			fmt.Printf("parse error: %s\n", err)
 			continue
@@ -121,4 +117,28 @@ func main() {
 	fmt.Println("---------------")
 	fmt.Printf("Spend time: %.4f sec\n", time.Now().Sub(startTime).Seconds())
 	fmt.Printf("Accuracy %d/%d (%d%%)", total, len(expectations), total*100/len(expectations))
+}
+
+func main() {
+	var (
+		 expectationFile string
+		 baseURL string
+	)
+
+	rootCmd := &cobra.Command{
+		Use:   "elasticsearch-query-test",
+		Short: "Simple tool to test ElasticSearch query accuracy",
+		Run: func(cmd *cobra.Command, args []string) {
+			run(baseURL, expectationFile)
+		},
+	}
+
+	rootCmd.PersistentFlags().StringVarP(&expectationFile, "expectation", "e",
+		"expectations.csv", "expectation file eg. dir/custom_expect.csv")
+	rootCmd.PersistentFlags().StringVarP(&baseURL, "url", "u",
+		"http://localhost", "search base url eg. http://myhost.com/search")
+
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
 }

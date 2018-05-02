@@ -4,7 +4,17 @@ Simple tool to check the accuracy of elasticsearch query results.
 
 ## Instructions
 
-* Change the query endpoint in `main.go`
+`go get -u github.com/rodrigo-brito/elasticsearch-query-test`
+
+```
+Usage:
+  elasticsearch-query-test [flags]
+
+Flags:
+  -e, --expectation string   expectation file eg. dir/custom_expect.csv (default "expectations.csv")
+  -u, --url string           search base url eg. http://myhost.com/search (default "http://localhost")
+```
+
 * Fill the `expectations.csv` file with test cases
 
   * `search_term`: input search term
